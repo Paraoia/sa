@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>学生选课系统</title>
+	<meta charset="UTF-8">
+	<script src="./angular.min.js"></script> 
+	<script src="./Dialogs.html"></script> 
+
+	<link rel="stylesheet" href="./jquery-ui.min.css">
+ 	<script src="./jquery.min.js"></script>
+  	<script src="./jquery-ui.min.js"></script>
+  	<link rel="stylesheet" href="jqueryui/style.css">
+
+	<style>
+		table, th , td  {
+		  border: 1px solid grey;
+		  border-collapse: collapse;
+		  padding: 5px;
+		}
+		table tr:nth-child(odd)	{
+		  background-color: #f1f1f1;
+		}
+		table tr:nth-child(even) {
+		  background-color: #ffffff;
+		}
+	</style>
+</head>
+<body>
+	<h1  style="text-align:center">选课管理</h1>
+	<input id="insert" type="button" value="添加"></input>
+	<input id="import" type="button" value="导入"></input>
+	<div ng-app="myApp" ng-controller="siteCtrl">
+	<table>
+		<tr>
+			<td style="text-align: center;">序列</td>
+			<td style="text-align: center;">学号</td>
+			<td style="text-align: center;">FirstName</td>
+			<td style="text-align: center;">LastName</td>
+			<td style="text-align: center;">专业</td>
+			<td style="text-align: center;">平时成绩</td>
+			<td style="text-align: center;">大作业成绩</td>
+			<td style="text-align: center;">期末成绩</td>
+			<td style="text-align: center;">最终成绩</td>
+			<td style="text-align: center;">操作</td>
+		</tr>
+		<tr ng-repeat="student in infos">
+			<td style="text-align: center;">{{ $index + 1 }}</td>
+			<td style="text-align: center;">{{ student.id }}</td>
+			<td style="text-align: center;">{{ student.firstName }}</td>
+			<td style="text-align: center;">{{ student.lastName }}</td>
+			<td style="text-align: center;">{{ student.major }}</td>
+			<td style="text-align: center;">{{ student.UsualMark }}</td>
+			<td style="text-align: center;">{{ student.PracMark }}</td>
+			<td style="text-align: center;">{{ student.FinalMark }}</td>
+			<td style="text-align: center;">{{ student.MajorMark }}</td>
+			<td style="text-align: center;">
+				<input type="button" class="btn btn-success" ng-click="delete(student)" value="删除"></input>
+				<input type="button" class="btn btn-success" ng-click="edit(student)" value="编辑"></input>
+				<input type="button" class="btn btn-success" ng-click="mark(student)" value="成绩"></input>
+			</td>
+		</tr>
+	</table>
+	</div>
+	<script type="text/javascript">
+		var app = angular.module('myApp', []);
+	
+		app.controller('siteCtrl', function($scope, $http) {
+			$http({
+				method: 'GET',
+				url: 'http://localhost:9966/sel_system/api/students'
+			}).then(function successCallback(response) {
+					$scope.infos = response.data;
+				}, function errorCallback(response) {
+					// 请求失败执行代码
+					alert('GET 请求错误');
+			});
+			$scope.delete = function(DeleteStudent) {
+				$http({
+					method: 'DELETE',
+					url: 'http://localhost:9966/sel_system/api/students/' + DeleteStudent.id
+				}).then(function successCallback(response) {
+						$scope.infos = response.data;
+					}, function errorCallback(response) {
+						// 请求失败执行代码
+						alert('DELETE 请求错误');
+				});
+				alert("delete " + DeleteStudent.id)
+			};
+			$scope.edit = function(EditStudent) {
+				CurStudent = EditStudent;
+				jQuery("#editdialog").dialog();
+				$scope.editStudentNumber = EditStudent.id;
+				$scope.editFirstName = EditStudent.firstName;
+				$scope.editLastName = EditStudent.lastName;
+				$scope.editMajor = EditStudent.major;
+				$scope.editUsualMark = EditStudent.UsualMark;
+				$scope.editPracMark = EditStudent.PracMark;
+				$scope.editFinalMark = EditStudent.FinalMark;
+				$scope.editMajorMark = EditStudent.MajorMark;
+			}
+		  	$scope.mark = function(MarkStudent) {
+		  		CurStudent = MarkStudent;
+		  		jQuery("#markdialog").dialog();
+			}
+			
+		});
+
+		$(function() {
+		    $("#insertdialog").hide();
+		    $("#importdialog").hide();
+		    $("#markdialog").hide();
+		    $("#editdialog").hide();
+            $("#insert").click(function(){
+              	$("#insertdialog").dialog();
+            });
+            $("#import").click(function(){
+              	$("#importdialog").dialog();
+            });
+            $("#mark").click(function(){
+              	$("#markdialog").dialog();
+            });
+
+            $(document).ready(function(){
+            	$("#InsertDialogYes").click(function() {
+            		var json = {
+            			"id" : "0",
+	            		"firstName" : $('input[name=InsertFirstName]').val(),
+	            		"lastName" : $('input[name=InsertLastName]').val(),
+	            		"major" : $('input[name=InsertMajor]').val(),
+	            		"UsualMark" : $('input[name=InsertUsualMark]').val(),
+	            		"PracMark" : $('input[name=InsertPracMark]').val(),
+	            		"FinalMark" : $('input[name=InsertFinalMark]').val(),
+	            		"MajorMark" : $('input[name=InsertMajorMark]').val()
+            		};
+            		// $("#request-process-patent").html("正在提交数据，请勿关闭当前窗口...");
+				    $.ajax({
+				        type: "POST",
+				        url: "http://localhost:9966/sel_system/api/students",
+				        contentType: "application/json; charset=utf-8",
+				        data: JSON.stringify(json),
+				        dataType: "json",
+				        success: function (message) {
+				            if (message > 0) {
+				                alert("请求已提交！我们会尽快与您取得联系");
+				            }
+				        },
+				        error: function (message) {
+				            $("#request-process-patent").html("提交数据失败！");
+				        }
+				    });
+				    window.location.reload();
+            	});
+            	$("#InsertDialogNo").click(function() {
+            		window.location.reload();
+            	});
+            	$('#EditDialogYes').click(function() {
+            		var json = {
+            			"id" : $('input[name=EditStudentNumber]').val(),
+	            		"firstName" : $('input[name=EditFirstName]').val(),
+	            		"lastName" : $('input[name=EditLastName]').val(),
+	            		"major" : $('input[name=EditMajor]').val(),
+	            		"UsualMark" : $('input[name=EditUsualMark]').val(),
+	            		"PracMark" : $('input[name=EditPracMark]').val(),
+	            		"FinalMark" : $('input[name=EditFinalMark]').val(),
+	            		"MajorMark" : $('input[name=EditMajorMark]').val()
+            		};
+            		// $("#request-process-patent").html("正在提交数据，请勿关闭当前窗口...");
+				    $.ajax({
+				        type: "PUT",
+				        url: "http://localhost:9966/sel_system/api/students/" + CurStudent.id,
+				        contentType: "application/json; charset=utf-8",
+				        data: JSON.stringify(json),
+				        dataType: "json",
+				        success: function (message) {
+				            if (message > 0) {
+				                alert("请求已提交！我们会尽快与您取得联系");
+				            }
+				        },
+				        error: function (message) {
+				            $("#request-process-patent").html("提交数据失败！");
+				        }
+				    });
+				    alert("修改成功");
+				    window.location.reload();
+            	});
+            	$("#EditDialogNo").click(function() {
+            		window.location.reload();
+            	});
+            	$("#MarkDialogYes").click(function() {
+            		var usualmark = Number($('input[name=MarkUsualMark]').val());
+            		var pracmark = Number($('input[name=MarkPracMark]').val());
+            		var finalmark = Number($('input[name=MarkFinalMark]').val());
+            		var majormark = usualmark + pracmark + finalmark;
+            		var json = {
+            			"id" : CurStudent.id,
+	            		"firstName" : CurStudent.firstName,
+	            		"lastName" : CurStudent.lastName,
+	            		"major" : CurStudent.major,
+	            		"UsualMark" : usualmark,
+	            		"PracMark" : pracmark,
+	            		"FinalMark" : finalmark,
+	            		"MajorMark" : majormark
+            		};
+            		// $("#request-process-patent").html("正在提交数据，请勿关闭当前窗口...");
+				    $.ajax({
+				        type: "PUT",
+				        url: "http://localhost:9966/sel_system/api/students/" + CurStudent.id,
+				        contentType: "application/json; charset=utf-8",
+				        data: JSON.stringify(json),
+				        dataType: "json",
+				        success: function (message) {
+				            if (message > 0) {
+				                alert("请求已提交！我们会尽快与您取得联系");
+				            }
+				        },
+				        error: function (message) {
+				            $("#request-process-patent").html("提交数据失败！");
+				        }
+				    });
+				    alert("最终成绩：" + majormark);
+				    window.location.reload();
+            	});
+            	$("#MarkDialogNo").click(function() {
+            		window.location.reload();
+            	});
+            });
+            
+		});
+	</script>
+
+	<div id="insertdialog" title="添加" ng-app="myApp" ng-controller="siteCtrl">
+  		学号:<input type="text" name="InsertStudentNumber"></input><br>
+		FirstName:<input type="text" name="InsertFirstName"></input><br>
+		LastName:<input type="text" name="InsertLastName"></input><br>
+		专业:<input type="text" name="InsertMajor"></input><br>
+		平时成绩:<input type="text" name="InsertUsualMark"></input><br>
+		大作业成绩:<input type="text" name="InsertPracMark"></input><br>
+		期末成绩:<input type="text" name="InsertFinalMark"></input><br>
+		最终成绩:<input type="text" name="InsertMajorMark"></input><br>
+		<input type="button" value="确认" id="InsertDialogYes"></input>
+		<input type="button" value="取消" id="InsertDialogNo"></input>
+	</div>
+	<div id="importdialog" title="导入">
+  		文件:<input type="text"></input><input type="button" value="浏览"></input><br>
+		<input type="button" value="确认"></input>
+		<input type="button" value="取消"></input>
+	</div>
+	<div id="markdialog" title="成绩录入">
+  		平时成绩:<input type="text" name="MarkUsualMark"></input><br>
+		大作业成绩:<input type="text" name="MarkPracMark"></input><br>
+		期末成绩:<input type="text" name="MarkFinalMark"></input><br>
+		总评<自动计算><br>
+		<input type="button" value="确认" id="MarkDialogYes"></input>
+		<input type="button" value="取消" id="MarkDialogNo"></input>
+	</div>
+	<div id="editdialog" title="修改" ng-app="myApp" ng-controller="siteCtrl">
+  		学号:<input type="text" name="EditStudentNumber"></input><br>
+		FirstName:<input type="text" name="EditFirstName"></input><br>
+		LastName:<input type="text" name="EditLastName"></input><br>
+		专业:<input type="text" name="EditMajor"></input><br>
+		平时成绩:<input type="text" name="EditUsualMark"></input><br>
+		大作业成绩:<input type="text" name="EditPracMark"></input><br>
+		期末成绩:<input type="text" name="EditFinalMark"></input><br>
+		最终成绩:<input type="text" name="EditMajorMark"></input><br>
+		<input type="button" value="确认" id="EditDialogYes"></input>
+		<input type="button" value="取消" id="EditDialogNo"></input>
+	</div>
+</body>
+</html>
